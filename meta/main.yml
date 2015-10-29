@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: chouseknecht 
+  description: Quick and easy email sending from Tower, Jenkins or any job stream. 
+  company: Ansible 
+  license: MIT
+  min_ansible_version: 1.9
+  platforms:
+  - name: EL
+    versions:
+    - all
+  categories:
+  - system
+
+dependencies: []
