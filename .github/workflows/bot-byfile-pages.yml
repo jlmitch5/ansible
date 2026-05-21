@@ -30,6 +30,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mkdir -p ./site
           python .github/pages/byfile/generate.py \
             --repo ${{ github.repository }} \
             --output ./site/index.html \
