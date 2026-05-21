@@ -1,0 +1,135 @@
+name: Post CI failure details
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  check-azure-pipelines:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.AZURE_DEVOPS_PAT != '' }}
+    env:
+      AZP_TOKEN: ${{ secrets.AZURE_DEVOPS_PAT }}
+      AZP_ORG: ansible
+      AZP_PROJECT: ansible
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            if (!process.env.AZP_TOKEN) {
+              core.info('AZURE_DEVOPS_PAT not configured, skipping.');
+              return;
+            }
+
+            const azpBase = `https://dev.azure.com/${process.env.AZP_ORG}/${process.env.AZP_PROJECT}/_apis`;
+            const azpHeaders = {
+              'Authorization': `Basic ${Buffer.from(':' + process.env.AZP_TOKEN).toString('base64')}`,
+              'Content-Type': 'application/json',
+            };
+
+            // Fetch builds completed in the last 10 minutes
+            const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+            const buildsUrl = `${azpBase}/build/builds?statusFilter=completed&resultFilter=failed&minFinishTime=${since}&api-version=7.0`;
+
+            const buildsResp = await fetch(buildsUrl, { headers: azpHeaders });
+            if (!buildsResp.ok) {
+              core.warning(`Azure API returned ${buildsResp.status}`);
+              return;
+            }
+            const buildsData = await buildsResp.json();
+            const builds = buildsData.value || [];
+
+            core.info(`Found ${builds.length} failed builds since ${since}`);
+
+            for (const build of builds) {
+              const buildId = build.id;
+              const buildUrl = build._links?.web?.href || `https://dev.azure.com/${process.env.AZP_ORG}/${process.env.AZP_PROJECT}/_build/results?buildId=${buildId}`;
+
+              // Find the associated PR
+              const triggerInfo = build.triggerInfo || {};
+              const prNumber = triggerInfo['pr.number'];
+              if (!prNumber) {
+                core.info(`Build ${buildId} has no associated PR, skipping.`);
+                continue;
+              }
+
+              // Check for existing comment to avoid duplicates
+              const marker = `<!-- ansibot-ci-${buildId} -->`;
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                { owner, repo, issue_number: parseInt(prNumber) }
+              );
+              if (comments.some(c => c.body.includes(marker))) {
+                core.info(`Already commented on PR #${prNumber} for build ${buildId}`);
+                continue;
+              }
+
+              // Fetch build timeline for failure details
+              const timelineUrl = `${azpBase}/build/builds/${buildId}/timeline?api-version=7.0`;
+              const timelineResp = await fetch(timelineUrl, { headers: azpHeaders });
+              let failedStages = 'Could not retrieve failure details.';
+
+              if (timelineResp.ok) {
+                const timeline = await timelineResp.json();
+                const failed = (timeline.records || [])
+                  .filter(r => r.result === 'failed' && r.type === 'Task')
+                  .map(r => `- **${r.name}** (${r.state})`)
+                  .join('\n');
+                if (failed) failedStages = failed;
+              }
+
+              // Fetch relevant logs (last failed task)
+              let logOutput = 'Log details not available.';
+              const timelineData = timelineResp.ok ? await timelineResp.clone().json() : null;
+              if (timelineData) {
+                const failedTask = (timelineData.records || [])
+                  .filter(r => r.result === 'failed' && r.log)
+                  .pop();
+                if (failedTask) {
+                  const logUrl = `${azpBase}/build/builds/${buildId}/logs/${failedTask.log.id}?api-version=7.0`;
+                  const logResp = await fetch(logUrl, { headers: azpHeaders });
+                  if (logResp.ok) {
+                    const logText = await logResp.text();
+                    const lines = logText.split('\n');
+                    logOutput = lines.slice(-50).join('\n');
+                  }
+                }
+              }
+
+              const body = [
+                marker,
+                `### :x: CI failure details`,
+                '',
+                `Build [#${buildId}](${buildUrl}) has failed.`,
+                '',
+                '**Failed stages:**',
+                '',
+                failedStages,
+                '',
+                '<details>',
+                '<summary>Relevant log output (last 50 lines)</summary>',
+                '',
+                '```',
+                logOutput,
+                '```',
+                '',
+                '</details>',
+                '',
+                '*This is an automated message from the ansible triage bot.*',
+              ].join('\n');
+
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number: parseInt(prNumber),
+                body,
+              });
+
+              core.info(`Posted CI failure comment on PR #${prNumber} for build ${buildId}`);
+            }

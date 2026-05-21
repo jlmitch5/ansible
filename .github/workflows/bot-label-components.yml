@@ -1,0 +1,140 @@
+name: Label by component
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  label-pr:
+    if: github.event_name == 'pull_request_target'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/ansibot
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const yaml = require('js-yaml');
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+
+            const config = yaml.load(
+              fs.readFileSync('.github/ansibot/component-labels.yml', 'utf8')
+            );
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number: prNumber }
+            );
+            const changedPaths = files.map(f => f.filename);
+
+            const labelsToAdd = new Set();
+            for (const [label, globs] of Object.entries(config)) {
+              if (label === 'keywords') continue;
+              for (const glob of globs) {
+                const pattern = glob
+                  .replace(/\*\*/g, '.*')
+                  .replace(/\*/g, '[^/]*');
+                const regex = new RegExp(`^${pattern}$`);
+                if (changedPaths.some(p => regex.test(p))) {
+                  labelsToAdd.add(label);
+                }
+              }
+            }
+
+            if (labelsToAdd.size > 0) {
+              const labels = [...labelsToAdd];
+              core.info(`Adding labels: ${labels.join(', ')}`);
+
+              for (const label of labels) {
+                try {
+                  await github.rest.issues.getLabel({ owner, repo, name: label });
+                } catch {
+                  await github.rest.issues.createLabel({
+                    owner, repo, name: label,
+                    color: '0075ca',
+                    description: `Component: ${label}`,
+                  });
+                }
+              }
+
+              await github.rest.issues.addLabels({
+                owner, repo,
+                issue_number: prNumber,
+                labels,
+              });
+            }
+
+  label-issue:
+    if: github.event_name == 'issues'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/ansibot
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const yaml = require('js-yaml');
+            const { owner, repo } = context.repo;
+            const issue = context.payload.issue;
+
+            const config = yaml.load(
+              fs.readFileSync('.github/ansibot/component-labels.yml', 'utf8')
+            );
+            const keywords = config.keywords || {};
+
+            const body = issue.body || '';
+            const componentMatch = body.match(
+              /### Component Name\s*\n+\s*(.+)/i
+            );
+            if (!componentMatch) {
+              core.info('No component name found in issue body.');
+              return;
+            }
+
+            const components = componentMatch[1]
+              .split(/[,\s]+/)
+              .map(c => c.trim().toLowerCase())
+              .filter(Boolean);
+
+            const labelsToAdd = new Set();
+            for (const component of components) {
+              const label = keywords[component];
+              if (label) {
+                labelsToAdd.add(label);
+              }
+            }
+
+            if (labelsToAdd.size > 0) {
+              const labels = [...labelsToAdd];
+              core.info(`Adding labels: ${labels.join(', ')}`);
+
+              for (const label of labels) {
+                try {
+                  await github.rest.issues.getLabel({ owner, repo, name: label });
+                } catch {
+                  await github.rest.issues.createLabel({
+                    owner, repo, name: label,
+                    color: '0075ca',
+                    description: `Component: ${label}`,
+                  });
+                }
+              }
+
+              await github.rest.issues.addLabels({
+                owner, repo,
+                issue_number: issue.number,
+                labels,
+              });
+            }

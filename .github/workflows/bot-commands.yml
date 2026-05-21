@@ -1,0 +1,153 @@
+name: Handle bot commands
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  process-command:
+    if: contains(github.event.comment.body, '@ansibot')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/ansibot
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const yaml = require('js-yaml');
+            const { owner, repo } = context.repo;
+            const comment = context.payload.comment;
+            const issueNumber = context.payload.issue.number;
+            const body = comment.body;
+
+            const config = yaml.load(
+              fs.readFileSync('.github/ansibot/component-labels.yml', 'utf8')
+            );
+
+            // Parse @ansibot commands
+            const lines = body.split('\n');
+            for (const line of lines) {
+              const trimmed = line.trim();
+
+              // @ansibot component =path/to/file
+              const addComponent = trimmed.match(
+                /@ansibot\s+component\s+=\s*(\S+)/i
+              );
+              if (addComponent) {
+                const path = addComponent[1];
+                let labelFound = null;
+
+                for (const [label, globs] of Object.entries(config)) {
+                  if (label === 'keywords') continue;
+                  for (const glob of globs) {
+                    const pattern = glob
+                      .replace(/\*\*/g, '.*')
+                      .replace(/\*/g, '[^/]*');
+                    if (new RegExp(`^${pattern}$`).test(path)) {
+                      labelFound = label;
+                      break;
+                    }
+                  }
+                  if (labelFound) break;
+                }
+
+                if (labelFound) {
+                  try {
+                    await github.rest.issues.getLabel({ owner, repo, name: labelFound });
+                  } catch {
+                    await github.rest.issues.createLabel({
+                      owner, repo, name: labelFound,
+                      color: '0075ca',
+                      description: `Component: ${labelFound}`,
+                    });
+                  }
+                  await github.rest.issues.addLabels({
+                    owner, repo,
+                    issue_number: issueNumber,
+                    labels: [labelFound],
+                  });
+                  core.info(`Added label '${labelFound}' for component path '${path}'`);
+                } else {
+                  core.info(`No matching label for path '${path}'`);
+                }
+                continue;
+              }
+
+              // @ansibot !component =path/to/file (remove)
+              const removeComponent = trimmed.match(
+                /@ansibot\s+!component\s+=\s*(\S+)/i
+              );
+              if (removeComponent) {
+                const path = removeComponent[1];
+                for (const [label, globs] of Object.entries(config)) {
+                  if (label === 'keywords') continue;
+                  for (const glob of globs) {
+                    const pattern = glob
+                      .replace(/\*\*/g, '.*')
+                      .replace(/\*/g, '[^/]*');
+                    if (new RegExp(`^${pattern}$`).test(path)) {
+                      try {
+                        await github.rest.issues.removeLabel({
+                          owner, repo,
+                          issue_number: issueNumber,
+                          name: label,
+                        });
+                        core.info(`Removed label '${label}'`);
+                      } catch (e) {
+                        core.info(`Label '${label}' not present, skipping.`);
+                      }
+                      break;
+                    }
+                  }
+                }
+                continue;
+              }
+
+              // @ansibot label +label_name
+              const addLabel = trimmed.match(/@ansibot\s+label\s+\+(\S+)/i);
+              if (addLabel) {
+                const label = addLabel[1];
+                try {
+                  await github.rest.issues.getLabel({ owner, repo, name: label });
+                } catch {
+                  core.info(`Label '${label}' does not exist, skipping.`);
+                  continue;
+                }
+                await github.rest.issues.addLabels({
+                  owner, repo,
+                  issue_number: issueNumber,
+                  labels: [label],
+                });
+                core.info(`Added label '${label}'`);
+                continue;
+              }
+
+              // @ansibot label -label_name
+              const removeLabel = trimmed.match(/@ansibot\s+label\s+-(\S+)/i);
+              if (removeLabel) {
+                const label = removeLabel[1];
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner, repo,
+                    issue_number: issueNumber,
+                    name: label,
+                  });
+                  core.info(`Removed label '${label}'`);
+                } catch {
+                  core.info(`Label '${label}' not present, skipping.`);
+                }
+                continue;
+              }
+            }
+
+            await github.rest.reactions.createForIssueComment({
+              owner, repo,
+              comment_id: comment.id,
+              content: 'eyes',
+            });

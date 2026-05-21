@@ -1,0 +1,23 @@
+name: Lock stale threads
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dessant/lock-threads@v5
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-inactive-days: 14
+          pr-inactive-days: 14
+          issue-lock-reason: resolved
+          pr-lock-reason: resolved
+          log-output: true

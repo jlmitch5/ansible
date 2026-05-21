@@ -1,0 +1,135 @@
+# Component-to-label mapping for ansible-core
+# Used by bot-label-components.yml to auto-label PRs and issues.
+#
+# Format: label → list of file path globs (for PRs) or component keywords (for issues)
+
+# Module categories
+module:
+  - lib/ansible/modules/**
+
+# Plugin categories
+action_plugin:
+  - lib/ansible/plugins/action/**
+callback_plugin:
+  - lib/ansible/plugins/callback/**
+connection_plugin:
+  - lib/ansible/plugins/connection/**
+filter_plugin:
+  - lib/ansible/plugins/filter/**
+inventory_plugin:
+  - lib/ansible/plugins/inventory/**
+lookup_plugin:
+  - lib/ansible/plugins/lookup/**
+shell_plugin:
+  - lib/ansible/plugins/shell/**
+strategy_plugin:
+  - lib/ansible/plugins/strategy/**
+test_plugin:
+  - lib/ansible/plugins/test/**
+vars_plugin:
+  - lib/ansible/plugins/vars/**
+cache_plugin:
+  - lib/ansible/plugins/cache/**
+
+# Core subsystems
+ansible_cli:
+  - lib/ansible/cli/**
+executor:
+  - lib/ansible/executor/**
+inventory:
+  - lib/ansible/inventory/**
+parsing:
+  - lib/ansible/parsing/**
+  - lib/ansible/parsing/vault/**
+playbook:
+  - lib/ansible/playbook/**
+template:
+  - lib/ansible/template/**
+vars:
+  - lib/ansible/vars/**
+galaxy:
+  - lib/ansible/galaxy/**
+config:
+  - lib/ansible/config/**
+
+# Testing infrastructure
+test:
+  - test/**
+ci:
+  - .azure-pipelines/**
+  - .github/**
+
+# Documentation and packaging
+docs:
+  - docs/**
+  - changelogs/**
+packaging:
+  - packaging/**
+
+# Keyword mappings for issue template component field
+# These map user-typed component names to labels
+keywords:
+  # Modules
+  copy: module
+  file: module
+  template: module
+  command: module
+  shell: module
+  raw: module
+  script: module
+  fetch: module
+  slurp: module
+  setup: module
+  gather_facts: module
+  debug: module
+  assert: module
+  fail: module
+  pause: module
+  wait_for: module
+  set_fact: module
+  uri: module
+  get_url: module
+  pip: module
+  package: module
+  apt: module
+  yum: module
+  dnf: module
+  service: module
+  systemd: module
+  user: module
+  group: module
+  cron: module
+  lineinfile: module
+  blockinfile: module
+  stat: module
+  find: module
+  unarchive: module
+  archive: module
+  git: module
+  subversion: module
+  include_tasks: module
+  import_tasks: module
+  include_role: module
+  import_role: module
+  include_vars: module
+  add_host: module
+  group_by: module
+  async_status: module
+  # Core subsystems
+  vault: parsing
+  jinja: template
+  jinja2: template
+  ansible-galaxy: galaxy
+  ansible-vault: parsing
+  ansible-playbook: ansible_cli
+  ansible-doc: ansible_cli
+  ansible-config: ansible_cli
+  ansible-console: ansible_cli
+  ansible-pull: ansible_cli
+  ansible-inventory: ansible_cli
+  # Plugins
+  ssh: connection_plugin
+  paramiko: connection_plugin
+  local: connection_plugin
+  winrm: connection_plugin
+  psrp: connection_plugin

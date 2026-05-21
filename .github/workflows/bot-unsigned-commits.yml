@@ -1,0 +1,73 @@
+name: Check commit signatures
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  check-signatures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+
+            const commits = await github.paginate(
+              github.rest.pulls.listCommits,
+              { owner, repo, pull_number: prNumber }
+            );
+
+            const unsigned = commits.filter(
+              c => !c.commit.verification || !c.commit.verification.verified
+            );
+
+            if (unsigned.length === 0) {
+              core.info('All commits are signed.');
+              return;
+            }
+
+            const marker = '<!-- ansibot-unsigned-commits -->';
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: prNumber }
+            );
+            const existing = comments.find(c => c.body.includes(marker));
+
+            const commitList = unsigned
+              .map(c => `- \`${c.sha.slice(0, 8)}\` ${c.commit.message.split('\n')[0]}`)
+              .join('\n');
+
+            const body = [
+              marker,
+              '### :warning: Unsigned commits detected',
+              '',
+              'The following commits are not signed:',
+              '',
+              commitList,
+              '',
+              'Signed commits are required for this repository. Please sign your commits',
+              'using SSH or GPG keys. See the',
+              '[GitHub documentation](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits)',
+              'for instructions.',
+              '',
+              '*This is an automated message from the ansible triage bot.*',
+            ].join('\n');
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo,
+                issue_number: prNumber,
+                body,
+              });
+            }
