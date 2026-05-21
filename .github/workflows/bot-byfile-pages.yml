@@ -32,7 +32,8 @@ jobs:
         run: |
           mkdir -p ./site
           python .github/pages/byfile/generate.py \
-            --repo ${{ github.repository }} \
+            --data-repo ansible/ansible \
+            --deploy-repo ${{ github.repository }} \
             --output ./site/index.html \
             --token "$GITHUB_TOKEN"
 
