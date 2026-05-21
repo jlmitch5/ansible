@@ -20,14 +20,13 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const yaml = require('js-yaml');
             const { owner, repo } = context.repo;
             const comment = context.payload.comment;
             const issueNumber = context.payload.issue.number;
             const body = comment.body;
 
-            const config = yaml.load(
-              fs.readFileSync('.github/ansibot/component-labels.yml', 'utf8')
+            const config = JSON.parse(
+              fs.readFileSync('.github/ansibot/component-labels.json', 'utf8')
             );
 
             // Parse @ansibot commands

@@ -23,12 +23,11 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const yaml = require('js-yaml');
             const { owner, repo } = context.repo;
             const prNumber = context.payload.pull_request.number;
 
-            const config = yaml.load(
-              fs.readFileSync('.github/ansibot/component-labels.yml', 'utf8')
+            const config = JSON.parse(
+              fs.readFileSync('.github/ansibot/component-labels.json', 'utf8')
             );
 
             const files = await github.paginate(
@@ -85,12 +84,11 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const yaml = require('js-yaml');
             const { owner, repo } = context.repo;
             const issue = context.payload.issue;
 
-            const config = yaml.load(
-              fs.readFileSync('.github/ansibot/component-labels.yml', 'utf8')
+            const config = JSON.parse(
+              fs.readFileSync('.github/ansibot/component-labels.json', 'utf8')
             );
             const keywords = config.keywords || {};
 

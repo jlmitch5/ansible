@@ -1,0 +1,188 @@
+{
+  "redirects": {
+    "ec2": {
+      "collection": "amazon.aws",
+      "repo": "https://github.com/ansible-collections/amazon.aws"
+    },
+    "aws": {
+      "collection": "amazon.aws",
+      "repo": "https://github.com/ansible-collections/amazon.aws"
+    },
+    "s3": {
+      "collection": "amazon.aws",
+      "repo": "https://github.com/ansible-collections/amazon.aws"
+    },
+    "cloudformation": {
+      "collection": "amazon.aws",
+      "repo": "https://github.com/ansible-collections/amazon.aws"
+    },
+    "iam": {
+      "collection": "amazon.aws",
+      "repo": "https://github.com/ansible-collections/amazon.aws"
+    },
+    "lambda": {
+      "collection": "amazon.aws",
+      "repo": "https://github.com/ansible-collections/amazon.aws"
+    },
+    "rds": {
+      "collection": "amazon.aws",
+      "repo": "https://github.com/ansible-collections/amazon.aws"
+    },
+    "route53": {
+      "collection": "amazon.aws",
+      "repo": "https://github.com/ansible-collections/amazon.aws"
+    },
+    "azure": {
+      "collection": "azure.azcollection",
+      "repo": "https://github.com/ansible-collections/azure"
+    },
+    "gcp": {
+      "collection": "google.cloud",
+      "repo": "https://github.com/ansible-collections/google.cloud"
+    },
+    "vmware": {
+      "collection": "community.vmware",
+      "repo": "https://github.com/ansible-collections/community.vmware"
+    },
+    "vsphere": {
+      "collection": "community.vmware",
+      "repo": "https://github.com/ansible-collections/community.vmware"
+    },
+    "docker": {
+      "collection": "community.docker",
+      "repo": "https://github.com/ansible-collections/community.docker"
+    },
+    "podman": {
+      "collection": "containers.podman",
+      "repo": "https://github.com/ansible-collections/podman"
+    },
+    "k8s": {
+      "collection": "kubernetes.core",
+      "repo": "https://github.com/ansible-collections/kubernetes.core"
+    },
+    "kubernetes": {
+      "collection": "kubernetes.core",
+      "repo": "https://github.com/ansible-collections/kubernetes.core"
+    },
+    "openshift": {
+      "collection": "kubernetes.core",
+      "repo": "https://github.com/ansible-collections/kubernetes.core"
+    },
+    "helm": {
+      "collection": "kubernetes.core",
+      "repo": "https://github.com/ansible-collections/kubernetes.core"
+    },
+    "ios": {
+      "collection": "cisco.ios",
+      "repo": "https://github.com/ansible-collections/cisco.ios"
+    },
+    "nxos": {
+      "collection": "cisco.nxos",
+      "repo": "https://github.com/ansible-collections/cisco.nxos"
+    },
+    "iosxr": {
+      "collection": "cisco.iosxr",
+      "repo": "https://github.com/ansible-collections/cisco.iosxr"
+    },
+    "asa": {
+      "collection": "cisco.asa",
+      "repo": "https://github.com/ansible-collections/cisco.asa"
+    },
+    "eos": {
+      "collection": "arista.eos",
+      "repo": "https://github.com/ansible-collections/arista.eos"
+    },
+    "junos": {
+      "collection": "junipernetworks.junos",
+      "repo": "https://github.com/ansible-collections/junipernetworks.junos"
+    },
+    "vyos": {
+      "collection": "vyos.vyos",
+      "repo": "https://github.com/ansible-collections/vyos.vyos"
+    },
+    "netconf": {
+      "collection": "ansible.netcommon",
+      "repo": "https://github.com/ansible-collections/ansible.netcommon"
+    },
+    "win_": {
+      "collection": "ansible.windows",
+      "repo": "https://github.com/ansible-collections/ansible.windows"
+    },
+    "win_command": {
+      "collection": "ansible.windows",
+      "repo": "https://github.com/ansible-collections/ansible.windows"
+    },
+    "win_copy": {
+      "collection": "ansible.windows",
+      "repo": "https://github.com/ansible-collections/ansible.windows"
+    },
+    "win_file": {
+      "collection": "ansible.windows",
+      "repo": "https://github.com/ansible-collections/ansible.windows"
+    },
+    "win_service": {
+      "collection": "ansible.windows",
+      "repo": "https://github.com/ansible-collections/ansible.windows"
+    },
+    "win_user": {
+      "collection": "ansible.windows",
+      "repo": "https://github.com/ansible-collections/ansible.windows"
+    },
+    "mysql": {
+      "collection": "community.mysql",
+      "repo": "https://github.com/ansible-collections/community.mysql"
+    },
+    "postgresql": {
+      "collection": "community.postgresql",
+      "repo": "https://github.com/ansible-collections/community.postgresql"
+    },
+    "zabbix": {
+      "collection": "community.zabbix",
+      "repo": "https://github.com/ansible-collections/community.zabbix"
+    },
+    "grafana": {
+      "collection": "community.grafana",
+      "repo": "https://github.com/ansible-collections/community.grafana"
+    },
+    "rabbitmq": {
+      "collection": "community.rabbitmq",
+      "repo": "https://github.com/ansible-collections/community.rabbitmq"
+    },
+    "redis": {
+      "collection": "community.general",
+      "repo": "https://github.com/ansible-collections/community.general"
+    },
+    "nagios": {
+      "collection": "community.general",
+      "repo": "https://github.com/ansible-collections/community.general"
+    },
+    "nmcli": {
+      "collection": "community.general",
+      "repo": "https://github.com/ansible-collections/community.general"
+    },
+    "firewalld": {
+      "collection": "ansible.posix",
+      "repo": "https://github.com/ansible-collections/ansible.posix"
+    },
+    "selinux": {
+      "collection": "ansible.posix",
+      "repo": "https://github.com/ansible-collections/ansible.posix"
+    },
+    "mount": {
+      "collection": "ansible.posix",
+      "repo": "https://github.com/ansible-collections/ansible.posix"
+    },
+    "sysctl": {
+      "collection": "ansible.posix",
+      "repo": "https://github.com/ansible-collections/ansible.posix"
+    },
+    "at": {
+      "collection": "ansible.posix",
+      "repo": "https://github.com/ansible-collections/ansible.posix"
+    },
+    "synchronize": {
+      "collection": "ansible.posix",
+      "repo": "https://github.com/ansible-collections/ansible.posix"
+    }
+  }
+}
