@@ -516,3 +516,4 @@ class CLI(object):
             if os.pathsep in data:
                 data = data.split(os.pathsep)[0]
         return data
+# test
